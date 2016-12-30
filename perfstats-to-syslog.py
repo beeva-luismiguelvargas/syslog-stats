@@ -82,7 +82,7 @@ class TaskThread(threading.Thread):
 """
 class AReporter(TaskThread):
 
-    def __init__(self, app_name, syslog_host, syslog_port, interval):
+    def __init__(self, app_name, syslog_host, syslog_hostname, syslog_port, interval):
         super(AReporter, self).__init__(interval)
         self.app_name = app_name
         self.syslog_host = syslog_host
@@ -94,7 +94,7 @@ class AReporter(TaskThread):
         self.logger.addFilter(f)
 
         syslog = SysLogHandler(address=(self.syslog_host, self.syslog_port))
-        formatter = logging.Formatter("%(asctime)s %(hostname)s {0}: %(message)s".format(self.app_name), datefmt='%b %d %H:%M:%S')
+        formatter = logging.Formatter("%(asctime)s {1} {0}: %(message)s".format(self.app_name, syslog_hostname), datefmt='%b %d %H:%M:%S')
         syslog.setFormatter(formatter)
 
         self.logger.addHandler(syslog)
@@ -153,8 +153,8 @@ class AReporter(TaskThread):
 
 class SystemReporter(AReporter):
 
-    def __init__(self, paths, latitude, longitude, syslog_host, syslog_port, interval):
-        super(SystemReporter, self).__init__("monitoring-agent", syslog_host, syslog_port, interval)
+    def __init__(self, syslog_host, syslog_hostname, syslog_port, interval, paths, latitude, longitude, province, city, store):
+        super(SystemReporter, self).__init__("monitoring-agent", syslog_host, syslog_hostname, syslog_port, interval)
         self.paths = paths
 
         # attributes
@@ -167,6 +167,9 @@ class SystemReporter(AReporter):
         self.process_data = None
         self.latitude_data = latitude
         self.longitude_data = longitude
+        self.province_data = province
+        self.city_data = city
+        self.store_data = store
 
     def register(self):
         super(SystemReporter, self).register()
@@ -305,19 +308,32 @@ class SystemReporter(AReporter):
         latitude = self.latitude_data
         longitude = self.longitude_data
 
+        province = self.province_data
+        city = self.city_data
+        store = self.store_data
+
         location = "{},{}".format(latitude, longitude)
 
         io_disk = io_disks.pop()
         ndata = network_data.pop()
+        path1 = paths.pop()
+        path2 = paths.pop()
+        path3 = paths.pop()
 
         messages = []
         messages.append({
             "cpu": cpu_data,
             "mem": mem_data,
+            "disk": path1,
+            "disk": path2,
+            "disk": path3,
             "io_disk": io_disk,
             "network": ndata,
             "processes": process_total,
-            "location": location
+            "location": location,
+            "province": province,
+            "city": city,
+            "store": store
         })
 
         # for io_disk in io_disks:
@@ -352,10 +368,14 @@ def main(argv):
         main_config.read(current_path + '/perfstats-to-syslog.cfg')
 
     syslog_host = main_config.get('syslog', 'host')
+    syslog_hostname = main_config.get('syslog', 'hostname')
     syslog_port = main_config.getint('syslog', 'port')
     interval_in_sec = main_config.getint('syslog', 'pollingInSec')
     latitude = main_config.get('general', 'latitude')
     longitude = main_config.get('general', 'longitude')
+    province = main_config.get('general', 'province')
+    city = main_config.get('general', 'city')
+    store = main_config.get('general', 'store')
 
     paths = []
     reporters = []
@@ -366,7 +386,7 @@ def main(argv):
             path = parts[1]
             paths.append({"name": name, "path": path})
 
-    reporters.append(SystemReporter(paths, latitude, longitude, syslog_host, syslog_port, interval_in_sec))
+    reporters.append(SystemReporter(syslog_host, syslog_hostname, syslog_port, interval_in_sec, paths, latitude, longitude, province, city, store))
 
     for reporter in reporters:
         reporter.daemon = True
