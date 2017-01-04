@@ -160,6 +160,7 @@ class SystemReporter(AReporter):
         # attributes
         self.io_data = None
         self.cpu_percent_data = None
+        self.cpu_times_percent_data = None
         self.paths_data = None
         self.mem_virtual_data = None
         self.mem_swap_data = None
@@ -173,18 +174,16 @@ class SystemReporter(AReporter):
 
     def register(self):
         super(SystemReporter, self).register()
-        network_interfaces = [ni for ni in psutil.net_io_counters(pernic=True)]
-        for network_interface in network_interfaces:
-            self.measures[network_interface + ".bytes_sent"]   = DeltaMeter(self.io_data[network_interface].bytes_sent)
-            self.measures[network_interface + ".bytes_recv"]   = DeltaMeter(self.io_data[network_interface].bytes_recv)
-            self.measures[network_interface + ".packets_sent"] = DeltaMeter(self.io_data[network_interface].packets_sent)
-            self.measures[network_interface + ".packets_recv"] = DeltaMeter(self.io_data[network_interface].packets_recv)
-            self.measures[network_interface + ".errin"]        = DeltaMeter(self.io_data[network_interface].errin)
-            self.measures[network_interface + ".errout"]       = DeltaMeter(self.io_data[network_interface].errout)
-            self.measures[network_interface + ".dropin"]       = DeltaMeter(self.io_data[network_interface].dropin)
-            self.measures[network_interface + ".dropout"]      = DeltaMeter(self.io_data[network_interface].dropout)
 
         self.measures["cpu"]                   = SimpleMeter(float, self.cpu_percent_data)
+        self.measures["cpu.user"]              = SimpleMeter(float, self.cpu_times_percent_data.user)
+        self.measures["cpu.system"]            = SimpleMeter(float, self.cpu_times_percent_data.system)
+        self.measures["cpu.idle"]              = SimpleMeter(float, self.cpu_times_percent_data.idle)
+        self.measures["cpu.nice"]              = SimpleMeter(float, self.cpu_times_percent_data.nice)
+        self.measures["cpu.irq"]               = SimpleMeter(float, self.cpu_times_percent_data.irq)
+        self.measures["cpu.softirq"]           = SimpleMeter(float, self.cpu_times_percent_data.softirq)
+        self.measures["cpu.iowait"]            = SimpleMeter(float, self.cpu_times_percent_data.iowait)
+        self.measures["cpu.steal"]             = SimpleMeter(float, self.cpu_times_percent_data.steal)
         self.measures["mem.virtual.total"]     = SimpleMeter(long, self.mem_virtual_data.total)
         self.measures["mem.virtual.available"] = SimpleMeter(long, self.mem_virtual_data.available)
         self.measures["mem.virtual.percent"]   = SimpleMeter(float, self.mem_virtual_data.percent)
@@ -194,12 +193,24 @@ class SystemReporter(AReporter):
         self.measures["mem.virtual.inactive"]  = SimpleMeter(long, self.mem_virtual_data.inactive)
         self.measures["mem.virtual.buffers"]   = SimpleMeter(long, self.mem_virtual_data.buffers)
         self.measures["mem.virtual.cached"]    = SimpleMeter(long, self.mem_virtual_data.cached)
+        self.measures["mem.virtual.shared"]    = SimpleMeter(long, self.mem_virtual_data.shared)
         self.measures["mem.swap.total"]        = SimpleMeter(long, self.mem_swap_data.total)
         self.measures["mem.swap.used"]         = SimpleMeter(long, self.mem_swap_data.used)
         self.measures["mem.swap.free"]         = SimpleMeter(long, self.mem_swap_data.free)
         self.measures["mem.swap.percent"]      = SimpleMeter(float, self.mem_swap_data.percent)
-        self.measures["mem.swap.sin"]          = SimpleMeter(long, self.mem_swap_data.sin)
-        self.measures["mem.swap.sout"]         = SimpleMeter(long, self.mem_swap_data.sout)
+        # self.measures["mem.swap.sin"]          = SimpleMeter(long, self.mem_swap_data.sin)
+        # self.measures["mem.swap.sout"]         = SimpleMeter(long, self.mem_swap_data.sout)
+
+        network_interfaces = [ni for ni in psutil.net_io_counters(pernic=True)]
+        for network_interface in network_interfaces:
+            self.measures[network_interface + ".bytes_sent"]   = DeltaMeter(self.io_data[network_interface].bytes_sent)
+            self.measures[network_interface + ".bytes_recv"]   = DeltaMeter(self.io_data[network_interface].bytes_recv)
+            self.measures[network_interface + ".packets_sent"] = DeltaMeter(self.io_data[network_interface].packets_sent)
+            self.measures[network_interface + ".packets_recv"] = DeltaMeter(self.io_data[network_interface].packets_recv)
+            # self.measures[network_interface + ".errin"]        = DeltaMeter(self.io_data[network_interface].errin)
+            # self.measures[network_interface + ".errout"]       = DeltaMeter(self.io_data[network_interface].errout)
+            # self.measures[network_interface + ".dropin"]       = DeltaMeter(self.io_data[network_interface].dropin)
+            # self.measures[network_interface + ".dropout"]      = DeltaMeter(self.io_data[network_interface].dropout)
 
         disks = [disk for disk in psutil.disk_io_counters(perdisk=True)]
         for disk in disks:
@@ -225,6 +236,7 @@ class SystemReporter(AReporter):
         super(SystemReporter, self).collect()
         self.io_data = psutil.net_io_counters(pernic=True)
         self.cpu_percent_data = psutil.cpu_percent(interval=None)
+        self.cpu_times_percent_data = psutil.cpu_times_percent(interval=None)
         self.mem_virtual_data = psutil.virtual_memory()
         self.mem_swap_data = psutil.swap_memory()
         self.paths_data = [psutil.disk_usage(p["path"]) for p in self.paths]
@@ -233,6 +245,16 @@ class SystemReporter(AReporter):
 
     def process(self):
         cpu_data = self.measures["cpu"].update_and_get(self.cpu_percent_data)
+        cpu_times_data = {
+            "user": self.measures["cpu.user"].update_and_get(self.cpu_times_percent_data.user),
+            "system": self.measures["cpu.system"].update_and_get(self.cpu_times_percent_data.system),
+            "idle": self.measures["cpu.idle"].update_and_get(self.cpu_times_percent_data.idle),
+            "nice": self.measures["cpu.nice"].update_and_get(self.cpu_times_percent_data.nice),
+            "irq": self.measures["cpu.user"].update_and_get(self.cpu_times_percent_data.irq),
+            "softirq": self.measures["cpu.user"].update_and_get(self.cpu_times_percent_data.softirq),
+            "iowait": self.measures["cpu.user"].update_and_get(self.cpu_times_percent_data.iowait),
+            "steal": self.measures["cpu.user"].update_and_get(self.cpu_times_percent_data.steal),
+        }
         mem_data = {
             "virtual": {
                 "total": self.measures["mem.virtual.total"].update_and_get(self.mem_virtual_data.total),
@@ -244,14 +266,15 @@ class SystemReporter(AReporter):
                 "inactive": self.measures["mem.virtual.inactive"].update_and_get(self.mem_virtual_data.inactive),
                 "buffers": self.measures["mem.virtual.buffers"].update_and_get(self.mem_virtual_data.buffers),
                 "cached": self.measures["mem.virtual.cached"].update_and_get(self.mem_virtual_data.cached),
+                "shared": self.measures["mem.virtual.shared"].update_and_get(self.mem_virtual_data.shared),
             },
             "swap": {
                 "total": self.measures["mem.swap.total"].update_and_get(self.mem_swap_data.total),
                 "used": self.measures["mem.swap.used"].update_and_get(self.mem_swap_data.used),
                 "free": self.measures["mem.swap.free"].update_and_get(self.mem_swap_data.free),
                 "percent": self.measures["mem.swap.percent"].update_and_get(self.mem_swap_data.percent),
-                "sin": self.measures["mem.swap.sin"].update_and_get(self.mem_swap_data.sin),
-                "sout": self.measures["mem.swap.sout"].update_and_get(self.mem_swap_data.sout),
+                # "sin": self.measures["mem.swap.sin"].update_and_get(self.mem_swap_data.sin),
+                # "sout": self.measures["mem.swap.sout"].update_and_get(self.mem_swap_data.sout),
             }
         }
 
@@ -268,10 +291,10 @@ class SystemReporter(AReporter):
                         self.io_data[k].packets_sent),
                     "packets_recv": self.measures[k + ".packets_recv"].update_and_get(
                         self.io_data[k].packets_recv),
-                    "errin": self.measures[k + ".errin"].update_and_get(self.io_data[k].errin),
-                    "errout": self.measures[k + ".errout"].update_and_get(self.io_data[k].errout),
-                    "dropin": self.measures[k + ".dropin"].update_and_get(self.io_data[k].dropin),
-                    "dropout": self.measures[k + ".dropout"].update_and_get(self.io_data[k].dropout),
+                    # "errin": self.measures[k + ".errin"].update_and_get(self.io_data[k].errin),
+                    # "errout": self.measures[k + ".errout"].update_and_get(self.io_data[k].errout),
+                    # "dropin": self.measures[k + ".dropin"].update_and_get(self.io_data[k].dropin),
+                    # "dropout": self.measures[k + ".dropout"].update_and_get(self.io_data[k].dropout),
                 }]
 
         paths = []
@@ -323,10 +346,11 @@ class SystemReporter(AReporter):
         messages = []
         messages.append({
             "cpu": cpu_data,
+            "cpu_times": cpu_times_data,
             "mem": mem_data,
-            "disk": path1,
-            "disk": path2,
-            "disk": path3,
+            "disk0": path1,
+            "disk1": path2,
+            "disk2": path3,
             "io_disk": io_disk,
             "network": ndata,
             "processes": process_total,
