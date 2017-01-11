@@ -424,7 +424,7 @@ def main(argv):
                 "network_name": io_name_json,
                 "network_packets_recv": io_packets_recv_json,
                 "network_packets_sent": io_packets_sent_json,
-                "host": "{}{}".format(args.hostname,doc),
+                "host": "{}{}".format(args.hostname,host),
                 "time": doc_time
             }
 
