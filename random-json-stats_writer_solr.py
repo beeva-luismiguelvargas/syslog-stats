@@ -430,7 +430,12 @@ def main(argv):
 
             with open(args.output, 'a') as outfile:
                 json.dump(message, outfile)
-                outfile.write("\n");
+                outfile.write("\n")
+        sys.stdout.write('\r')
+        # the exact output you're looking for:
+        sys.stdout.write("[%-30s] %d%%" % ('=' * ((host+1)*30/args.nhost), ((host+1)*100)/args.nhost))
+        sys.stdout.flush()
+    sys.stdout.write('\n')
 
 if __name__ == "__main__":
     main(sys.argv)
