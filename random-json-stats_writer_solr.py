@@ -14,6 +14,7 @@ JSON_FILE = 'stats.json'
 HOSTNAME = 'hostname'
 STORE = 0
 NDATA = 10
+NHOST = 1
 INTERVAL = 10
 
 
@@ -45,6 +46,13 @@ parser.add_argument("--ndata",
                     type=int,
                     default=NDATA,
                     help="Number of documents to generate")
+
+parser.add_argument("--nhost",
+                    "-c",
+                    dest="nhost",
+                    type=int,
+                    default=NHOST,
+                    help="Number of hosts to simulate")
 
 parser.add_argument("--interval",
                     "-i",
@@ -192,6 +200,8 @@ def main(argv):
     location = "{},{}".format(latitude, longitude)
 
     mem_virtual_data_used = mem_virtual_data.used
+
+    actual_time = time.time()
 
     for doc in range(args.ndata):
 
@@ -352,7 +362,7 @@ def main(argv):
         # path1 = paths_json.pop()
         # path2 = paths_json.pop()
         # path3 = paths_json.pop()
-        doc_time = datetime.datetime.fromtimestamp(time.time() + args.interval*doc).strftime("%Y-%m-%dT%H:%M:%SZ")
+        doc_time = datetime.datetime.fromtimestamp(actual_time + args.interval*doc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
         message = {
             "store_location": location,
