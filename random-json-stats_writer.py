@@ -220,7 +220,7 @@ def main(argv):
         location = "{},{}".format(latitude, longitude)
 
         io_disk = io_disk_json.pop()
-        ndata = io_json.pop()
+        io_net = io_json.pop()
         path1 = paths_json.pop()
         path2 = paths_json.pop()
         path3 = paths_json.pop()
@@ -233,7 +233,7 @@ def main(argv):
             "disk1": path2,
             "disk2": path3,
             "io_disk": io_disk,
-            "network": ndata,
+            "network": io_net,
             "processes": process_json,
             "location": location,
             "province": province,

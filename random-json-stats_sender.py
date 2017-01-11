@@ -42,7 +42,6 @@ class Syslog:
 
   def send(self, message, level, hostnumber):
     "Send a syslog message to remote host using UDP."
-    # data = "<%d> %s" % (level + self.facility*8, message)
     data = "<%d>%s %s %s" % (level + self.facility*8, datetime.datetime.now().strftime("%b %d %H:%M:%S"), "hostname{}".format(hostnumber), "monitoring-agent: "+message)
     self.socket.sendto(data, (self.host, self.port))
     print data
@@ -57,8 +56,7 @@ if __name__ == "__main__":
     log.send(serialized_data, Level.INFO, 0)
 
 
-#
-#
+
 #
 # class Syslog:
 #   """A syslog client that logs to a remote server.

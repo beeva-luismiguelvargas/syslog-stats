@@ -250,10 +250,10 @@ class SystemReporter(AReporter):
             "system": self.measures["cpu.system"].update_and_get(self.cpu_times_percent_data.system),
             "idle": self.measures["cpu.idle"].update_and_get(self.cpu_times_percent_data.idle),
             "nice": self.measures["cpu.nice"].update_and_get(self.cpu_times_percent_data.nice),
-            "irq": self.measures["cpu.user"].update_and_get(self.cpu_times_percent_data.irq),
-            "softirq": self.measures["cpu.user"].update_and_get(self.cpu_times_percent_data.softirq),
-            "iowait": self.measures["cpu.user"].update_and_get(self.cpu_times_percent_data.iowait),
-            "steal": self.measures["cpu.user"].update_and_get(self.cpu_times_percent_data.steal),
+            "irq": self.measures["cpu.irq"].update_and_get(self.cpu_times_percent_data.irq),
+            "softirq": self.measures["cpu.softirq"].update_and_get(self.cpu_times_percent_data.softirq),
+            "iowait": self.measures["cpu.iowait"].update_and_get(self.cpu_times_percent_data.iowait),
+            "steal": self.measures["cpu.steal"].update_and_get(self.cpu_times_percent_data.steal),
         }
         mem_data = {
             "virtual": {
