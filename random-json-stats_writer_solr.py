@@ -16,6 +16,7 @@ STORE = 0
 NDATA = 10
 NHOST = 1
 INTERVAL = 10
+START_DATE = time.time()
 
 
 parser = argparse.ArgumentParser(__file__,
@@ -53,6 +54,13 @@ parser.add_argument("--nhost",
                     type=int,
                     default=NHOST,
                     help="Number of hosts to simulate")
+
+parser.add_argument("--date",
+                    "-d",
+                    dest="start_date",
+                    type=int,
+                    default=START_DATE,
+                    help="Starting date in seconds")
 
 parser.add_argument("--interval",
                     "-i",
@@ -105,8 +113,7 @@ def main(argv):
 
     args = parser.parse_args()
 
-    outfilename = 'stats.json'
-    silentremove(outfilename)
+    silentremove(args.output)
 
     paths = []
     paths.append({"name": "root", "path": "/"})
@@ -201,7 +208,7 @@ def main(argv):
 
     mem_virtual_data_used = mem_virtual_data.used
 
-    actual_time = time.time()
+    actual_time = args.start_date
 
     for host in range(args.nhost):
         for doc in range(args.ndata):
