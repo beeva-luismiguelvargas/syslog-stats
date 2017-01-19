@@ -387,9 +387,9 @@ def main(argv):
 
     main_config = ConfigParser.RawConfigParser()
     if len(argv) == 2:
-        main_config.read(current_path + '/perfstats-to-syslog{}.cfg'.format(argv[1]))
+        main_config.read(current_path + '/metrics-to-syslog{}.cfg'.format(argv[1]))
     else:
-        main_config.read(current_path + '/perfstats-to-syslog.cfg')
+        main_config.read(current_path + '/metrics-to-syslog.cfg')
 
     syslog_host = main_config.get('syslog', 'host')
     syslog_hostname = main_config.get('syslog', 'hostname')
